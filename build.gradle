@@ -1,91 +1,144 @@
+import java.nio.charset.StandardCharsets
+
 buildscript {
-  repositories {
-    mavenLocal()
-    mavenCentral()
-  }
+    ext {
+        versions = [
+                lombok : "1.18.20",
+                junit5 : "5.7.2",
+                assertj: "3.19.0",
+        ]
+    }
+
+    repositories {
+        google()
+        mavenLocal()
+        mavenCentral()
+
+        flatDir {
+            dirs("$rootDir/lib")
+        }
+    }
 }
 
 plugins {
-  id 'java'
+    id("java")
 }
 
-group 'net.sympower'
-version '1.18.10-v1-SNAPSHOT'
+group = "io.github.imsejin"
+version = versions.lombok
 
-sourceCompatibility = 1.8
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+apply(plugin: "java")
+apply(plugin: "maven-publish")
+apply(plugin: "idea")
+
+// Prevents error from occurring "unmappable character for encoding MS949".
+[compileJava, compileTestJava]*.options*.encoding = StandardCharsets.UTF_8
 
 repositories {
-  mavenLocal()
-  mavenCentral()
-}
+    google()
+    mavenLocal()
+    mavenCentral()
 
-apply plugin: 'java'
-apply plugin: 'maven-publish'
-apply plugin: 'idea'
-
-idea {
-  module {
-    outputDir file("$buildDir/classes/main")
-    testOutputDir file("$buildDir/classes/test")
-  }
-}
-
-publishing {
-  publications {
-    mavenJava(MavenPublication) {
-      from components.java
+    flatDir {
+        dirs("$rootDir/lib")
     }
-  }
 }
 
 configurations {
-  lombok
-  compileOnly
+    lombok
+    lombokEx
 }
 
-def unpackedAndRenamedLombokDir = file("$buildDir/lombok")
-
-task unpackAndRenameLombok {
-  inputs.files configurations.lombok
-  outputs.dir unpackedAndRenamedLombokDir
-  doFirst {
-    mkdir unpackedAndRenamedLombokDir
-    delete unpackedAndRenamedLombokDir.listFiles()
-  }
-  doLast {
-    copy {
-      from zipTree(configurations.lombok.singleFile)
-      into unpackedAndRenamedLombokDir
-      include 'lombok/**/*'
-      rename "(.*)[.]SCL[.]lombok", '$1.class'
+idea {
+    module {
+        outputDir(file("$buildDir/classes/main"))
+        testOutputDir(file("$buildDir/classes/test"))
     }
-  }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from(components.java)
+        }
+    }
+}
+
+/**
+ * Unpack lombok library packed by ShadowClassLoader and
+ * Rename to the standard jvm byte code.
+ */
+def unpackedLombokDir = file("$buildDir/lombok")
+task unpackLombok {
+    inputs.files(configurations.lombok)
+    outputs.dir(unpackedLombokDir)
+    doFirst {
+        mkdir(unpackedLombokDir)
+        delete(unpackedLombokDir.listFiles())
+    }
+    doLast {
+        copy {
+            from(zipTree(configurations.lombok.singleFile))
+            into(unpackedLombokDir)
+            include("lombok/**/*")
+            rename("(.+)\\.SCL\\.lombok", '$1.class')
+        }
+    }
 }
 
 tasks.compileJava {
-  dependsOn unpackAndRenameLombok
+    dependsOn(unpackLombok)
 }
 
-test {
-  useJUnitPlatform()
-  systemProperty "gradleBuildDir", buildDir
+task referToSelf {
+//    inputs.files(configurations.lombokEx)
+}
+
+tasks.compileTestJava {
+    tasks.jar
+    dependsOn(referToSelf)
 }
 
 dependencies {
-  compileOnly files("${System.properties['java.home']}/../lib/tools.jar")
-  compileOnly 'org.kohsuke.metainf-services:metainf-services:1.8'
-  compileOnly "org.eclipse.jdt:org.eclipse.jdt.core:3.10.0"
-  compileOnly 'javax.inject:javax.inject:1'
-  lombok 'org.projectlombok:lombok:1.18.10'
-  compile files(unpackedAndRenamedLombokDir)
+    // "com.sun:tools:1.8"
+    if (JavaVersion.VERSION_1_8.isCompatibleWith(JavaVersion.current())) {
+        // When your java version is less than or equal to "1.8".
+        compileOnly(files("${System.properties['java.home']}/../lib/tools.jar"))
+    } else {
+        // When your java version is greater than "1.8",
+        // "tools.jar" is removed since "1.9".
+        compileOnly(fileTree(dir: "$rootDir/lib", include: ["**/*.jar"]))
+    }
 
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
-  testCompile 'com.google.testing.compile:compile-testing:0.18'
-  testCompile files("${System.properties['java.home']}/../lib/tools.jar")
-  testCompile 'commons-io:commons-io:2.6'
-  testCompile 'org.assertj:assertj-core:3.12.0'
-  testCompile 'org.ow2.asm:asm:7.1'
-  testCompile 'org.ow2.asm:asm-util:7.1'
-  testCompile 'org.apache.logging.log4j:log4j-slf4j-impl:2.12.1'
+    compileOnly(group: "org.kohsuke.metainf-services", name: "metainf-services", version: "1.8")
+    compileOnly(group: "org.eclipse.jdt", name: "org.eclipse.jdt.core", version: "3.25.0")
+    compileOnly(group: "javax.inject", name: "javax.inject", version: "1")
+
+    // Expected configuration ':lombok' to contain exactly one file, however, it contains no files.
+    lombok(group: "org.projectlombok", name: "lombok", version: "$versions.lombok")
+    // "org.projectlombok:lombok:$versions.lombok"
+    compileOnly(files(unpackedLombokDir))
+    // "org.projectlombok:lombok:$versions.lombok"
+    testCompileOnly(files(unpackedLombokDir))
+    testAnnotationProcessor(group: "org.projectlombok", name: "lombok", version: "$versions.lombok")
+
+    testCompileOnly(files("$buildDir/libs/$name-${version}.jar"))
+    testAnnotationProcessor(files("$buildDir/libs/$name-${version}.jar"))
+
+    testImplementation(group: "org.junit.jupiter", name: "junit-jupiter-api", version: "$versions.junit5")
+    testRuntimeOnly(group: "org.junit.jupiter", name: "junit-jupiter-engine", version: "$versions.junit5")
+    testCompileOnly(group: "org.assertj", name: "assertj-core", version: "$versions.assertj")
+    testCompileOnly(group: "com.google.testing.compile", name: "compile-testing", version: "0.19")
+    testCompileOnly(group: "commons-io", name: "commons-io", version: "2.6")
+    testCompileOnly(group: "org.ow2.asm", name: "asm", version: "7.1")
+    testCompileOnly(group: "org.ow2.asm", name: "asm-util", version: "7.1")
+    testCompileOnly(group: "org.apache.logging.log4j", name: "log4j-slf4j-impl", version: "2.12.1")
+}
+
+test {
+    useJUnitPlatform()
+    systemProperty("gradleBuildDir", buildDir)
 }
