@@ -49,7 +49,6 @@ repositories {
 
 configurations {
     lombok
-    lombokEx
 }
 
 idea {
@@ -93,15 +92,6 @@ tasks.compileJava {
     dependsOn(unpackLombok)
 }
 
-task referToSelf {
-//    inputs.files(configurations.lombokEx)
-}
-
-tasks.compileTestJava {
-    tasks.jar
-    dependsOn(referToSelf)
-}
-
 dependencies {
     // "com.sun:tools:1.8"
     if (JavaVersion.VERSION_1_8.isCompatibleWith(JavaVersion.current())) {
@@ -114,23 +104,39 @@ dependencies {
     }
 
     compileOnly(group: "org.kohsuke.metainf-services", name: "metainf-services", version: "1.8")
+    annotationProcessor(group: "org.kohsuke.metainf-services", name: "metainf-services", version: "1.8")
+
     compileOnly(group: "org.eclipse.jdt", name: "org.eclipse.jdt.core", version: "3.25.0")
     compileOnly(group: "javax.inject", name: "javax.inject", version: "1")
 
-    // Expected configuration ':lombok' to contain exactly one file, however, it contains no files.
+    /**
+     * To avoid disclosing internal APIs, Lombok changes file extension
+     * from "class" to "SCL.lombok" since 1.16.0 using ShadowClassLoader.
+     *
+     * This works for accessing to enclosed internal APIs.
+     * These classes are in the following path.
+     *
+     *     build/lombok/
+     *
+     * If you don't use "configurations.lombok", you will see this error message.
+     *
+     *     Expected configuration ':lombok' to contain exactly one file,
+     *     however, it contains no files.
+     */
     lombok(group: "org.projectlombok", name: "lombok", version: "$versions.lombok")
-    // "org.projectlombok:lombok:$versions.lombok"
     compileOnly(files(unpackedLombokDir))
-    // "org.projectlombok:lombok:$versions.lombok"
     testCompileOnly(files(unpackedLombokDir))
     testAnnotationProcessor(group: "org.projectlombok", name: "lombok", version: "$versions.lombok")
 
-    testCompileOnly(files("$buildDir/libs/$name-${version}.jar"))
-    testAnnotationProcessor(files("$buildDir/libs/$name-${version}.jar"))
+    /**
+     * To test lombok-plus annotations, refer to itself.
+     */
+    testCompileOnly(rootProject)
+    testAnnotationProcessor(rootProject)
 
     testImplementation(group: "org.junit.jupiter", name: "junit-jupiter-api", version: "$versions.junit5")
     testRuntimeOnly(group: "org.junit.jupiter", name: "junit-jupiter-engine", version: "$versions.junit5")
-    testCompileOnly(group: "org.assertj", name: "assertj-core", version: "$versions.assertj")
+    testImplementation(group: "org.assertj", name: "assertj-core", version: "$versions.assertj")
     testCompileOnly(group: "com.google.testing.compile", name: "compile-testing", version: "0.19")
     testCompileOnly(group: "commons-io", name: "commons-io", version: "2.6")
     testCompileOnly(group: "org.ow2.asm", name: "asm", version: "7.1")
