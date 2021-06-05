@@ -1,7 +1,7 @@
 package test;
 
-import net.sympower.symbok.ReadLock;
-import net.sympower.symbok.WriteLock;
+import lombok.ReadLock;
+import lombok.WriteLock;
 
 public class DefaultLock {
 

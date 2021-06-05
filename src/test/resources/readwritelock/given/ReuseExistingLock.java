@@ -1,6 +1,6 @@
 package test;
 
-import net.sympower.symbok.ReadLock;
+import lombok.ReadLock;
 
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 

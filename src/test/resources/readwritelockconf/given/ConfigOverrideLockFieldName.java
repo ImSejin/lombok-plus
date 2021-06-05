@@ -1,6 +1,6 @@
 package test;
 
-import net.sympower.symbok.WriteLock;
+import lombok.WriteLock;
 
 public class ConfigOverrideLockFieldName {
 
