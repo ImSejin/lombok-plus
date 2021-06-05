@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class HandleSingletonTest {
 
     @Test
-    @DisplayName("Verify existence of a inner class for singleton lazy holder")
+    @DisplayName("Verify existence of a inner class named '*SingletonLazyHolder'")
     void test0() {
         // given
         Class<SingletonSample> type = SingletonSample.class;
@@ -40,10 +40,20 @@ class HandleSingletonTest {
         Method getInstance = type.getDeclaredMethod(methodName);
 
         // then
-        assertThat(getInstance).isNotNull();
-        assertThat(Modifier.isStatic(getInstance.getModifiers())).isTrue();
-        assertThat(getInstance.getName()).isEqualTo(methodName);
-        assertThat(getInstance.invoke(null)).isNotNull().isExactlyInstanceOf(type);
+        assertThat(getInstance)
+                .isNotNull();
+        assertThat(Modifier.isStatic(getInstance.getModifiers()))
+                .isTrue();
+        assertThat(getInstance.getName())
+                .isEqualTo(methodName);
+
+        SingletonSample instance = (SingletonSample) getInstance.invoke(null);
+        SingletonSample other = (SingletonSample) getInstance.invoke(null);
+        assertThat(instance)
+                .isNotNull()
+                .isExactlyInstanceOf(type)
+                .returns(instance.getUuid(), it -> other.getUuid());
+        assertThat(instance).isSameAs(other);
 
 //        new SingletonSample(); // The constructor SingletonSample() is not visible.
     }
