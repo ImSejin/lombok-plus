@@ -66,6 +66,21 @@ publishing {
     }
 }
 
+clean {
+    // Initializes file list to be deleted.
+    delete = []
+
+    // Removes all build files except for "build/libs/lombok-plus-{version}.jar".
+    if (file(buildDir).exists()) {
+        files(buildDir.listFiles()).filter { it.name != "libs" }.forEach { delete it }
+
+        if (file("$buildDir/libs").exists()) {
+            def buildFilename = "${rootProject.name}-${version}.jar"
+            files(file("$buildDir/libs").listFiles()).filter { it.name != buildFilename }.forEach { delete it }
+        }
+    }
+}
+
 /**
  * Unpack lombok library packed by ShadowClassLoader and
  * Rename to the standard jvm byte code.
@@ -102,6 +117,7 @@ dependencies {
         // "tools.jar" is removed since "1.9".
         compileOnly(fileTree(dir: "$rootDir/lib", include: ["**/*.jar"]))
     }
+    // compileOnly(group: "com.github.olivergondza", name: "maven-jdk-tools-wrapper", version: "0.1")
 
     compileOnly(group: "org.kohsuke.metainf-services", name: "metainf-services", version: "1.8")
     annotationProcessor(group: "org.kohsuke.metainf-services", name: "metainf-services", version: "1.8")
