@@ -119,6 +119,13 @@ dependencies {
     }
     // compileOnly(group: "com.github.olivergondza", name: "maven-jdk-tools-wrapper", version: "0.1")
 
+    /**
+     * Automatically registers services to be handled by annotation processor.
+     * This generates files like the following names.
+     *
+     *     META-INF/services/lombok.core.configuration.ConfigurationKeysLoader
+     *     META-INF/services/lombok.javac.JavacAnnotationHandler
+     */
     compileOnly(group: "org.kohsuke.metainf-services", name: "metainf-services", version: "1.8")
     annotationProcessor(group: "org.kohsuke.metainf-services", name: "metainf-services", version: "1.8")
 
