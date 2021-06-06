@@ -159,6 +159,7 @@ dependencies {
 
     testImplementation(group: "org.junit.jupiter", name: "junit-jupiter-api", version: "$versions.junit5")
     testRuntimeOnly(group: "org.junit.jupiter", name: "junit-jupiter-engine", version: "$versions.junit5")
+    testImplementation(group: "org.junit.jupiter", name: "junit-jupiter-params", version: "$versions.junit5")
     testImplementation(group: "org.assertj", name: "assertj-core", version: "$versions.assertj")
     testCompileOnly(group: "com.google.testing.compile", name: "compile-testing", version: "0.19")
     testCompileOnly(group: "commons-io", name: "commons-io", version: "2.6")
