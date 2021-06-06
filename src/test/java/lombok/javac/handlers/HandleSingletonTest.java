@@ -2,6 +2,8 @@ package lombok.javac.handlers;
 
 import lombok.sample.SingletonSample;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -13,29 +15,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class HandleSingletonTest {
 
-    @Test
     @Order(0)
+    @ParameterizedTest
+    @ValueSource(classes = {SingletonSample.Vanilla.class, SingletonSample.Lombok.class})
     @DisplayName("Verify existence of a inner class named '*SingletonLazyHolder'")
-    void test0() {
-        // given
-        Class<SingletonSample> type = SingletonSample.class;
-
+    void test0(Class<?> type) {
         // when
         List<Class<?>> innerClasses = Arrays.asList(type.getDeclaredClasses());
 
         // then
         String innerClassName = type.getName() + '$' + type.getSimpleName() + "SingletonLazyHolder";
         assertThat(innerClasses)
-                .as("'lombok.SingletonTest$Sample$SampleSingletonLazyHolder' is in inner classes")
+                .as("'*SingletonLazyHolder' is in the class as a inner class")
                 .anyMatch(innerClass -> innerClassName.equals(innerClass.getName()));
     }
 
-    @Test
     @Order(1)
+    @ParameterizedTest
+    @ValueSource(classes = {SingletonSample.Vanilla.class, SingletonSample.Lombok.class})
     @DisplayName("Verify existence of method 'getInstance'")
-    void test1() throws ReflectiveOperationException {
+    void test1(Class<?> type) throws ReflectiveOperationException {
         // given
-        Class<SingletonSample> type = SingletonSample.class;
         String methodName = "getInstance";
 
         // when
@@ -49,12 +49,12 @@ class HandleSingletonTest {
 //        new SingletonSample(); // The constructor SingletonSample() is not visible.
     }
 
-    @Test
     @Order(2)
+    @ParameterizedTest
+    @ValueSource(classes = {SingletonSample.Vanilla.class, SingletonSample.Lombok.class})
     @DisplayName("Verify singleness of class annotated with @Singleton")
-    void test2() throws ReflectiveOperationException {
+    void test2(Class<?> type) throws ReflectiveOperationException {
         // given
-        Class<SingletonSample> type = SingletonSample.class;
         String methodName = "getInstance";
 
         // when

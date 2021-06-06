@@ -5,10 +5,33 @@ import lombok.Singleton;
 
 import java.util.UUID;
 
-@Getter
-@Singleton
-public class SingletonSample {
+public interface SingletonSample {
 
-    private final UUID uuid = UUID.randomUUID();
+    UUID getUuid();
+
+    @Getter
+    class Vanilla implements SingletonSample {
+        private final UUID uuid = UUID.randomUUID();
+
+        private Vanilla() {
+        }
+
+        public static Vanilla getInstance() {
+            return Vanilla.VanillaSingletonLazyHolder.INSTANCE;
+        }
+
+        private static class VanillaSingletonLazyHolder {
+            private static final Vanilla INSTANCE = new Vanilla();
+
+            private VanillaSingletonLazyHolder() {
+            }
+        }
+    }
+
+    @Getter
+    @Singleton
+    class Lombok implements SingletonSample {
+        private final UUID uuid = UUID.randomUUID();
+    }
 
 }
