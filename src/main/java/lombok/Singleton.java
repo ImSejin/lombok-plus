@@ -18,23 +18,31 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * <li>public static method that returns itself</li>
  * </ul>
  *
- * <pre><code>
- * public class SingletonSample {
- *     private SingletonSample() {
+ * <pre>{@code
+ *     @Singleton
+ *     public class SingletonSample {
  *     }
+ * }</pre>
  *
- *     public static SingletonSample getInstance() {
- *         return SingletonSample.SingletonSampleSingletonLazyHolder.INSTANCE;
- *     }
+ * <hr>
  *
- *     private static class SingletonSampleSingletonLazyHolder {
- *         private static final SingletonSample INSTANCE = new SingletonSample();
+ * <pre>{@code
+ *     public class SingletonSample {
+ *         private SingletonSample() {
+ *         }
  *
- *         private SingletonSampleSingletonLazyHolder() {
+ *         public static SingletonSample getInstance() {
+ *             return SingletonSample.SingletonSampleSingletonLazyHolder.INSTANCE;
+ *         }
+ *
+ *         private static class SingletonSampleSingletonLazyHolder {
+ *             private static final SingletonSample INSTANCE = new SingletonSample();
+ *
+ *             private SingletonSampleSingletonLazyHolder() {
+ *             }
  *         }
  *     }
- * }
- * </code></pre>
+ * }</pre>
  */
 @Documented
 @Retention(SOURCE)
