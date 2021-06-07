@@ -87,8 +87,10 @@ clean {
  */
 def unpackedLombokDir = file("$buildDir/lombok")
 task unpackLombok {
+    // Snapshot inputs and outputs before executing task ":unpackLombok".
     inputs.files(configurations.lombok)
     outputs.dir(unpackedLombokDir)
+
     doFirst {
         mkdir(unpackedLombokDir)
         delete(unpackedLombokDir.listFiles())
